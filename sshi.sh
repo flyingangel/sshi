@@ -5,6 +5,7 @@
 # ======
 
 #set working dir
+CURRENT_DIR=$(pwd -P)
 DIR_ROOT=$(dirname -- "$(realpath "$0")")
 cd "$DIR_ROOT" || exit 1
 
@@ -17,7 +18,73 @@ log.header "To show the manual: man sshi"
 log.header "To set default username for current shell: export SSHI_USERNAME=username"
 log.newline
 
-function main() {
+function dispatcher() {
+    local action=$1
+
+    case $action in
+    "scp")
+        exec_scp "$@"
+        shift
+        ;;
+    *) exec_ssh "$@" ;;
+    esac
+
+}
+
+function exec_ssh() {
+    ask_host
+    ask_username
+
+    {
+        #debug
+        printf '%s' "ssh $SSHI_USERNAME@$host "
+        print_args "$@"
+    } | log.info
+
+    #shellcheck disable=SC2029
+    ssh "$SSHI_USERNAME@$host" "$@"
+}
+
+function exec_scp() {
+    local filename=$1
+    local dir="~/"
+
+    [[ -n $filename ]] || log.error "Argument filename missing" true
+
+    #if absolute path not work, try relative path
+    if [[ ! -f $filename && -f $CURRENT_DIR/$filename ]]; then
+        filename="$(realpath "$CURRENT_DIR/$filename")"
+    fi
+
+    #remove filename argument
+    shift
+
+    #opts
+    POSITIONAL=()
+    for i in "$@"; do
+        case $i in
+        --dir=*) dir="${i#*=}" ;;
+        *) POSITIONAL+=("$i") ;;
+        esac
+    done
+    #restore positional parameters
+    set -- "${POSITIONAL[@]}"
+
+    ask_host
+    ask_username
+
+    {
+        #debug
+        printf '%s' "scp $filename $SSHI_USERNAME@$host:$dir "
+        print_args "$@"
+    } | log.info
+
+    scp "$filename" "$SSHI_USERNAME@$host:$dir" "$@"
+
+    log.finish "DONE"
+}
+
+function ask_host() {
     #print hosts
     list=$(printf '%s' "$(cat /etc/hosts)" | awk -F "\\\s+" '{print $1"\t"$2}')
     i=0
@@ -52,7 +119,9 @@ function main() {
     fi
 
     host="${hostList[$input]}"
+}
 
+function ask_username() {
     #ask for username
     if [[ -z $SSHI_USERNAME ]]; then
         input.read SSHI_USERNAME "Enter username of $host: "
@@ -62,22 +131,24 @@ function main() {
         log.error "Invalid username"
         exit 1
     fi
-
-    {
-        #debug
-        printf '%s' "ssh $SSHI_USERNAME@$host "
-        for arg in "$@"; do
-            #if contains space
-            if [[ "$arg" =~ ' ' ]]; then
-                printf '"%s" ' "$arg"
-            else
-                printf '%s ' "$arg"
-            fi
-        done
-     } | log.info
-
-    #shellcheck disable=SC2029
-    ssh "$SSHI_USERNAME"@"$host" "$@"
 }
 
-main "$@"
+function print_args() {
+    for arg in "$@"; do
+        #if contains space
+        if [[ "$arg" =~ ' ' ]]; then
+            printf '"%s" ' "$arg"
+        else
+            printf '%s ' "$arg"
+        fi
+    done
+}
+
+# ========
+# = INIT =
+# ========
+#case number of args in command line
+case $# in
+0) exec_ssh ;;
+*) dispatcher "$@" ;;
+esac

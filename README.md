@@ -8,9 +8,11 @@ Run `./install.sh` (as root) to install the `sshi` command.
 
 ## How to use
 
-Type `sshi` in the terminal to use this tool.
+Type `sshi` to use helper for `ssh` command.
 
 Any additional arguments or options will be added to the native `ssh` command. Ex: `sshi -p 777 -t "ls -la"`.
+
+Type `sshi scp /path/to/file` to use helper for `scp` command to send a file to remote server.
 
 ## Uninstall
 
