@@ -10,6 +10,9 @@ source shell_modules/shell-lib/autoload.sh
 
 log.warning "Make sure to run this script with sudo"
 
-uninstall_binary "sshi" || log.error "ERROR" true
+{
+    uninstall_binary "sshi"
+    uninstall_manpage "sshi.1.gz"
+} || log.fatal "Error" true
 
 log.finish "DONE"

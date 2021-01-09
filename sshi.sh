@@ -12,16 +12,11 @@ cd "$DIR_ROOT" || exit 1
 #load external lib
 source "$DIR_ROOT/shell_modules/shell-lib/autoload.sh"
 
-log.header "-- SSHI --"
-log.header "Hash: $(git branch) #$(git rev-parse --short HEAD)"
-log.header "To show the manual: man sshi"
-log.header "To set default username for current shell: export SSHI_USERNAME=username"
-log.newline
-
 function dispatcher() {
     local action=$1
 
     case $action in
+    "-h" | "--help") man_sshi ;;
     "scp")
         exec_scp "$@"
         shift
@@ -29,6 +24,12 @@ function dispatcher() {
     *) exec_ssh "$@" ;;
     esac
 
+}
+
+function man_sshi() {
+    log.header "-- SSHI --"
+    log.header "Hash: $(git branch) #$(git rev-parse --short HEAD)"
+    log.header "To show the manual: man sshi"
 }
 
 function exec_ssh() {
@@ -124,6 +125,9 @@ function ask_host() {
 function ask_username() {
     #ask for username
     if [[ -z $SSHI_USERNAME ]]; then
+        log.newline
+        log.header "To set default username for current shell: export SSHI_USERNAME=username"
+
         input.read SSHI_USERNAME "Enter username of $host: "
     fi
 
@@ -147,8 +151,4 @@ function print_args() {
 # ========
 # = INIT =
 # ========
-#case number of args in command line
-case $# in
-0) exec_ssh ;;
-*) dispatcher "$@" ;;
-esac
+dispatcher "$@"

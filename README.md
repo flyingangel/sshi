@@ -19,3 +19,13 @@ Type `sshi scp /path/to/file` to use helper for `scp` command to send a file to 
 `sshi` command is installed in `/usr/local/bin`.
 
 Use the script `uninstall.sh` to remove it automatically.
+
+## Development
+
+Test and update man page
+
+    pandoc man/manpage.md -s -t man | /usr/bin/man -l -
+
+Build man page
+
+    pandoc man/manpage.md -s -t man | gzip > man/manpage.1.gz

@@ -15,6 +15,9 @@ source shell_modules/shell-lib/autoload.sh
 
 log.warning "Make sure to run this script with sudo"
 
-install_binary "$(realpath sshi.sh)" "sshi" || log.fatal "Error" true
+{
+    install_binary "$(realpath sshi.sh)" "sshi"
+    install_manpage man/manpage.1.gz sshi.1.gz
+} || log.fatal "Error" true
 
 log.finish "DONE"
