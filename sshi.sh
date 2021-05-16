@@ -18,8 +18,8 @@ function dispatcher() {
     case $action in
     "-h" | "--help") man_sshi ;;
     "scp")
-        exec_scp "$@"
         shift
+        exec_scp "$@"
         ;;
     *) exec_ssh "$@" ;;
     esac
@@ -57,6 +57,9 @@ function exec_scp() {
         filename="$(realpath "$CURRENT_DIR/$filename")"
     fi
 
+    #last check
+    [[ -f $filename ]] || log.error "Cound not found file $filename" true
+
     #remove filename argument
     shift
 
@@ -86,23 +89,25 @@ function exec_scp() {
 }
 
 function ask_host() {
-    #print hosts
+    local input ip list i hostList
+
     list=$(printf '%s' "$(cat /etc/hosts)" | awk -F "\\\s+" '{print $1"\t"$2}')
-    i=0
+    i=1
     hostList=()
 
-    log.header "#\tIP\t\tHost"
+    log.header "$(printf '   %-15s\t%-30s\t%s\n' 'IP' 'Host' '#')"
 
     while read -r line; do
         #test for valid IP
         if [[ $line =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+.*$ ]]; then
             ip=$(printf '%s' "$line" | awk -F "\t" '{print $1}')
+            host=$(printf '%s' "$line" | awk -F "\t" '{print $2}')
 
             if [[ $ip == "127.0.0.1" ]]; then
                 continue
             fi
 
-            echo -e "$i\t$line"
+            printf '   %-15s\t%-30s\t%s\n' "$ip" "$host" "$i"
 
             hostList+=("$ip")
             ((i++))
@@ -119,6 +124,7 @@ function ask_host() {
         exit 1
     fi
 
+    [[ $input -gt 1 ]] && ((input--))
     host="${hostList[$input]}"
 }
 
@@ -128,7 +134,7 @@ function ask_username() {
         log.newline
         log.header "To set default username for current shell: export SSHI_USERNAME=username"
 
-        input.read SSHI_USERNAME "Enter username of $host: "
+        input.read SSHI_USERNAME "$host's username: "
     fi
 
     if [[ -z $SSHI_USERNAME || $SSHI_USERNAME =~ ' ' ]]; then
