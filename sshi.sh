@@ -79,11 +79,12 @@ function exec_scp() {
 
     {
         #debug
-        printf '%s' "scp $filename $SSHI_USERNAME@$host:$dir "
+        printf '%s' "scp "
         print_args "$@"
+        printf '%s' "$filename $SSHI_USERNAME@$host:$dir"
     } | log.info
 
-    scp "$filename" "$SSHI_USERNAME@$host:$dir" "$@"
+    scp "$@" "$filename" "$SSHI_USERNAME@$host:$dir"
 
     log.finish "DONE"
 }
@@ -124,7 +125,7 @@ function ask_host() {
         exit 1
     fi
 
-    [[ $input -gt 1 ]] && ((input--))
+    [[ $input -gt 0 ]] && ((input--))
     host="${hostList[$input]}"
 }
 
