@@ -19,6 +19,9 @@ A ssh client helper. Display list of hosts to connect. Host list are configured 
 **-h, --help**
 : display help message
 
+**--username=[*USERNAME*]**
+: set the ssh username for current operation
+
 # COMMAND
 
 **sshi [*ARGS*]**
@@ -26,6 +29,12 @@ A ssh client helper. Display list of hosts to connect. Host list are configured 
 
 **sshi scp [*FILE*] [*ARGS*]**
 : execute *scp* command to remotely send a file; additionnal arguments are passed to the *scp* command
+
+# TIPS
+
+To memorize the username, simply export the [*SSHI_USERNAME*] variable to the shell or put in */home/user/.bashrc*
+
+> export SSHI_USERNAME=username
 
 # EXAMPLES
 

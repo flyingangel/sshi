@@ -23,7 +23,6 @@ function dispatcher() {
         ;;
     *) exec_ssh "$@" ;;
     esac
-
 }
 
 function man_sshi() {
@@ -33,6 +32,19 @@ function man_sshi() {
 }
 
 function exec_ssh() {
+    local i
+
+    #opts
+    POSITIONAL=()
+    for i in "$@"; do
+        case $i in
+        --username=*) SSHI_USERNAME="${i#*=}" ;;
+        *) POSITIONAL+=("$i") ;;
+        esac
+    done
+    #restore positional parameters
+    set -- "${POSITIONAL[@]}"
+
     ask_host
     ask_username
 
@@ -49,6 +61,7 @@ function exec_ssh() {
 function exec_scp() {
     local filename=$1
     local dir="~/"
+    local i
 
     [[ -n $filename ]] || log.error "Argument filename missing" true
 
@@ -68,6 +81,7 @@ function exec_scp() {
     for i in "$@"; do
         case $i in
         --dir=*) dir="${i#*=}" ;;
+        --username=*) SSHI_USERNAME="${i#*=}" ;;
         *) POSITIONAL+=("$i") ;;
         esac
     done
