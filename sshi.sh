@@ -132,13 +132,9 @@ function ask_host() {
 
     # Use dialog to display
     if command -v dialog &> /dev/null; then
-        input=$(dialog --keep-tite --menu "Choose a server:" 30 70 "${#dialogList[@]}" "${dialogList[@]}" 3>&1 1>&2 2>&3)
-
-        # User cancel
-        if ! [[ "$input" =~ ^[0-9]+$ ]]; then
-            exit 1
-        fi
+        input=$(dialog --keep-tite --menu "Choose a server:" 30 70 "${#dialogList[@]}" "${dialogList[@]}" 3>&1 1>&2 2>&3) || exit 1
     else
+        log.info "\"dialog\" command is missing - fallback CLI based selection"
         log.header "$(printf '   %-2s\t%-15s\t%-30s\n' '#' 'IP' 'Host')"
 
         # Fallback to text-based selection
