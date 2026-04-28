@@ -118,7 +118,7 @@ function ask_host() {
             ip=$(printf '%s' "$line" | awk -F "\t" '{print $1}')
             host=$(printf '%s' "$line" | awk -F "\t" '{print $2}')
 
-            if [[ $ip == "127.0.0.1" ]]; then
+            if [[ $ip == 127.0.* ]]; then
                 continue
             fi
 
