@@ -32,7 +32,7 @@ function man_sshi() {
 }
 
 function exec_ssh() {
-    local i
+    local i result
 
     #opts
     POSITIONAL=()
@@ -45,12 +45,14 @@ function exec_ssh() {
     #restore positional parameters
     set -- "${POSITIONAL[@]}"
 
-    ask_host
+    host.ask result || exit 1
     ask_username
+
+    host="$result"
 
     {
         #debug
-        printf '%s' "ssh $SSHI_USERNAME@$host "
+        printf '%s' "ssh $SSHI_USERNAME@$host"
         print_args "$@"
     } | log.info
 
@@ -61,7 +63,7 @@ function exec_ssh() {
 function exec_scp() {
     local filename=$1
     local dir="~/"
-    local i
+    local i result
 
     [[ -n $filename ]] || log.error "Argument filename missing" true
 
@@ -88,8 +90,10 @@ function exec_scp() {
     #restore positional parameters
     set -- "${POSITIONAL[@]}"
 
-    ask_host
+    host.ask result || exit 1
     ask_username
+
+    host="$result"
 
     {
         #debug
@@ -101,66 +105,6 @@ function exec_scp() {
     scp "$@" "$filename" "$SSHI_USERNAME@$host:$dir"
 
     log.finish "DONE"
-}
-
-function ask_host() {
-    local input ip list i hostList textList dialogList
-
-    i=1
-    hostList=()
-    textList=()
-    dialogList=()
-    list=$(printf '%s' "$(cat /etc/hosts)" | awk -F "\\\s+" '{print $1"\t"$2}')
-
-    while read -r line; do
-        #test for valid IP
-        if [[ $line =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+.*$ ]]; then
-            ip=$(printf '%s' "$line" | awk -F "\t" '{print $1}')
-            host=$(printf '%s' "$line" | awk -F "\t" '{print $2}')
-
-            if [[ $ip == 127.0.* ]]; then
-                continue
-            fi
-
-            textList+=("$(printf '   %-2s\t%-15s\t%-30s' "$i" "$ip" "$host")")
-            dialogList+=("$i" "$(printf '%-15s\t%s' "$ip" "$host")")
-            hostList+=("$ip")
-
-            ((i++))
-        fi
-    done < <(echo "$list")
-
-    # Use dialog to display
-    if command -v dialog &> /dev/null; then
-        input=$(dialog --keep-tite --menu "Choose a server:" 30 70 "${#dialogList[@]}" "${dialogList[@]}" 3>&1 1>&2 2>&3) || exit 1
-    else
-        log.info "\"dialog\" command is missing - fallback CLI based selection"
-        log.header "$(printf '   %-2s\t%-15s\t%-30s\n' '#' 'IP' 'Host')"
-
-        # Fallback to text-based selection
-        for line in "${textList[@]}"; do
-            printf '%s\n' "$line"
-        done
-
-        log.newline
-
-        read -rp 'Choose a server number: ' input
-
-        # Test if the input is a number
-        if ! [[ "$input" =~ ^[0-9]+$ ]]; then
-            log.error "Invalid number"
-            exit 1
-        fi
-    fi
-
-    #test if is a number
-    if ! [[ "$input" =~ ^[0-9]+$ ]]; then
-        log.error "Invalid number"
-        exit 1
-    fi
-
-    [[ $input -gt 0 ]] && ((input--))
-    host="${hostList[$input]}"
 }
 
 function ask_username() {
