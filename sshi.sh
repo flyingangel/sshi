@@ -46,7 +46,7 @@ function exec_ssh() {
     set -- "${POSITIONAL[@]}"
 
     host.ask result || exit 1
-    ask_username
+    ask_username "$result"
 
     host="$result"
 
@@ -91,7 +91,7 @@ function exec_scp() {
     set -- "${POSITIONAL[@]}"
 
     host.ask result || exit 1
-    ask_username
+    ask_username "$result"
 
     host="$result"
 
@@ -108,6 +108,8 @@ function exec_scp() {
 }
 
 function ask_username() {
+    local host=$1
+
     #ask for username
     if [[ -z $SSHI_USERNAME ]]; then
         log.newline
